@@ -1,5 +1,11 @@
-## Interface: 120001, 120000, 50503, 38000, 30405, 20505, 11508
+## Interface: 120001, 120000
 ## Title: SimpleMacroPage
-## Notes: SimpleMacroPage
+## Notes: Expands the macro UI into a larger multi-column page layout.
+## Author: natyaphis
+## Version: 1.0.0
+## IconTexture: Interface\Icons\INV_Inscription_ScrollOfWisdom_01
+## Category-enUS: Interface
+## Category-zhCN: 界面增强
+## LoadOnDemand: 0
 
 SimpleMacroPage.lua

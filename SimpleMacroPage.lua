@@ -14,5 +14,3 @@ MacroFrame.MacroSelector.customStride = 7       -- 解除宏图标固定每行�
   MacroFrameCharLimitText:SetPoint("TOP",MacroFrameTextBackground,"BOTTOM",0,0); -- 将字符数提示放到文本框下方
   MacroHorizontalBarLeft:ClearAllPoints();              -- 移除左侧装饰横条的定位
 end                                                     -- 结束判断
---网友提供
---https://nga.178.com/read.php?pid=855753147&opt=128
