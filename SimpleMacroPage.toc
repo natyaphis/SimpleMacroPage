@@ -2,7 +2,7 @@
 ## Title: SimpleMacroPage
 ## Notes: Expands the macro UI into a larger multi-column page layout.
 ## Author: natyaphis
-## Version: 1.0.0
+## Version: 1.0.1
 ## IconTexture: Interface\Icons\INV_Inscription_ScrollOfWisdom_01
 ## Category-enUS: Interface
 ## Category-zhCN: 界面增强
