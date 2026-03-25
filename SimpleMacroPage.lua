@@ -2,14 +2,13 @@ local ADDON_NAME = ...
 
 local CONFIG = {
   frame = {
-    width = 660, -- 宏窗口总宽度
-    height = 500, -- 宏窗口总高度
+    width = 650, -- 宏窗口总宽度
+    height = 490, -- 宏窗口总高度
   },
 
   leftPanel = {
-    columns = 7, -- 左侧宏图标每行数量
-    iconGap = 1, -- 左侧宏图标之间的视觉空隙
-    width = 360, -- 左侧宏图标区域宽度
+    columns = 6, -- 左侧宏图标每行数量
+    width = 315, -- 左侧宏图标区域宽度
     height = 395, -- 左侧宏图标区域高度
     offsetX = 10, -- 左侧宏图标区域相对 MacroFrame 左侧的偏移
     offsetY = -62, -- 左侧宏图标区域相对 MacroFrame 顶部的偏移
@@ -147,7 +146,7 @@ local function UpdateMacroSelectorButtons()
   local scrollBar = selector.ScrollBar
   local scrollBarWidth = (scrollBar and scrollBar:GetWidth() or 16)
   local usableWidth = CONFIG.leftPanel.width - scrollBarWidth - CONFIG.leftPanel.scrollbarGap
-  local iconSize = math.floor((usableWidth - (CONFIG.leftPanel.columns - 1) * CONFIG.leftPanel.iconGap) / CONFIG.leftPanel.columns)
+  local iconSize = math.floor(usableWidth / CONFIG.leftPanel.columns)
 
   if iconSize < 24 then
     iconSize = 24
