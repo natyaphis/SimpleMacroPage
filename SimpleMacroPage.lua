@@ -2,28 +2,34 @@ local ADDON_NAME = ...
 
 local CONFIG = {
   frame = {
-    width = 628, -- 宏窗口总宽度，包含左右面板和中间留白
-    height = 655, -- 宏窗口总高度
+    width = 660, -- 宏窗口总宽度
+    height = 500, -- 宏窗口总高度
   },
 
   leftPanel = {
-    columns = 7, -- 左侧宏图标列表每行显示数量
-    width = 360, -- 左侧面板宽度
-    height = 560, -- 左侧面板高度
-    offsetX = 18, -- 左侧面板相对 MacroFrame 左边缘的偏移
-    offsetY = -58, -- 左侧面板相对 MacroFrame 顶部的偏移
-    inset = 8, -- 左侧面板背景相对内容区域的包边
+    columns = 7, -- 左侧宏图标每行数量
+    iconGap = 1, -- 左侧宏图标之间的视觉空隙
+    width = 360, -- 左侧宏图标区域宽度
+    height = 395, -- 左侧宏图标区域高度
+    offsetX = 10, -- 左侧宏图标区域相对 MacroFrame 左侧的偏移
+    offsetY = -62, -- 左侧宏图标区域相对 MacroFrame 顶部的偏移
+    inset = 8, -- 左侧背景框相对内容区域的包边
+    scrollbarGap = -15, -- 左侧最右一列图标与滚动条间距
   },
 
   rightPanel = {
-    width = 250, -- 右侧编辑面板宽度
-    height = 220, -- 右侧编辑面板高度
+    topControlsOffsetX = 0, -- 右侧顶部控件组整体水平偏移
+    topControlsOffsetY = 0, -- 右侧顶部控件组整体垂直偏移
+
+    textBoxWidth = 250, -- 右侧文本框宽度
+    textBoxHeight = 220, -- 右侧文本框高度
+    textBoxOffsetX = -15, -- 右侧文本框相对右侧面板基准点的水平偏移
+    textBoxOffsetY = -140, -- 右侧文本框相对右侧面板基准点的垂直偏移
+
     gap = 24, -- 左右面板之间的视觉间距
-    topOffsetY = -132, -- 右侧文本区域顶部偏移
-    selectedOffsetY = -60, -- 右侧选中宏区域顶部偏移
-    scrollFrameHeight = 215, -- 宏正文滚动区域高度
-    charLimitOffsetY = 0, -- 字数提示相对右侧面板底部的偏移
-    inset = 8, -- 右侧面板背景相对内容区域的包边
+    charLimitOffsetY = -3, -- 字数提示相对文本框底部固定下移 3 像素
+    inset = 8, -- 右侧背景框相对内容区域的包边
+    scrollbarGap = 3, -- 右侧文本编辑框与滚动条间距
   },
 }
 
@@ -67,8 +73,33 @@ local function GetRightPanelBackdrop()
   return addonFrame.rightPanelBackdrop
 end
 
-local function GetRightPanelLeft()
+local function GetRightTopGroup()
+  if addonFrame.rightTopGroup then
+    return addonFrame.rightTopGroup
+  end
+
+  addonFrame.rightTopGroup = CreateFrame("Frame", ADDON_NAME .. "RightTopGroup", MacroFrame)
+  return addonFrame.rightTopGroup
+end
+
+local function GetRightPanelBaseLeft()
   return CONFIG.leftPanel.offsetX + CONFIG.leftPanel.width + CONFIG.rightPanel.gap
+end
+
+local function GetTextBoxLeft()
+  return GetRightPanelBaseLeft() + CONFIG.rightPanel.textBoxOffsetX
+end
+
+local function GetTextBoxTopOffsetY()
+  return CONFIG.rightPanel.textBoxOffsetY
+end
+
+local function GetSelectedPanelTopOffsetY()
+  return -60 + CONFIG.rightPanel.topControlsOffsetY
+end
+
+local function GetTextScrollFrameBottomInset()
+  return 12
 end
 
 local function UpdatePanelBackdrops()
@@ -106,12 +137,94 @@ local function UpdatePanelBackdrops()
   rightBackdrop:Show()
 end
 
+local function UpdateMacroSelectorButtons()
+  local selector = MacroFrame and MacroFrame.MacroSelector
+  local scrollBox = selector and selector.ScrollBox
+  if not selector or not scrollBox or not scrollBox.ForEachFrame then
+    return
+  end
+
+  local scrollBar = selector.ScrollBar
+  local scrollBarWidth = (scrollBar and scrollBar:GetWidth() or 16)
+  local usableWidth = CONFIG.leftPanel.width - scrollBarWidth - CONFIG.leftPanel.scrollbarGap
+  local iconSize = math.floor((usableWidth - (CONFIG.leftPanel.columns - 1) * CONFIG.leftPanel.iconGap) / CONFIG.leftPanel.columns)
+
+  if iconSize < 24 then
+    iconSize = 24
+  end
+
+  scrollBox:ForEachFrame(function(button)
+    if button.SetSize then
+      button:SetSize(iconSize, iconSize)
+    end
+  end)
+end
+
+local function PositionScrollBars()
+  local selector = MacroFrame and MacroFrame.MacroSelector
+  if selector and selector.ScrollBar then
+    selector.ScrollBar:ClearAllPoints()
+    selector.ScrollBar:SetPoint("TOPLEFT", selector, "TOPRIGHT", CONFIG.leftPanel.scrollbarGap, -2)
+    selector.ScrollBar:SetPoint("BOTTOMLEFT", selector, "BOTTOMRIGHT", CONFIG.leftPanel.scrollbarGap, 2)
+  end
+
+  if MacroFrameScrollFrame and MacroFrameScrollFrame.ScrollBar then
+    MacroFrameScrollFrame.ScrollBar:ClearAllPoints()
+    MacroFrameScrollFrame.ScrollBar:SetPoint("TOPLEFT", MacroFrameTextBackground, "TOPRIGHT", CONFIG.rightPanel.scrollbarGap, 0)
+    MacroFrameScrollFrame.ScrollBar:SetPoint("BOTTOMLEFT", MacroFrameTextBackground, "BOTTOMRIGHT", CONFIG.rightPanel.scrollbarGap, 0)
+  end
+end
+
+local function RepositionRightPanelControls(rightPanelBaseLeft)
+  local offsetX = CONFIG.rightPanel.topControlsOffsetX
+  local offsetY = CONFIG.rightPanel.topControlsOffsetY
+  local topGroup = GetRightTopGroup()
+
+  topGroup:ClearAllPoints()
+  topGroup:SetPoint("TOPLEFT", MacroFrame, "TOPLEFT", rightPanelBaseLeft + offsetX, -58 + offsetY)
+  topGroup:SetSize(CONFIG.rightPanel.textBoxWidth + 140, 72)
+
+  if MacroFrameSelectedMacroButton then
+    MacroFrameSelectedMacroButton:ClearAllPoints()
+    MacroFrameSelectedMacroButton:SetPoint("TOPLEFT", topGroup, "TOPLEFT", 0, 0)
+  end
+
+  if MacroFrameSelectedMacroName and MacroFrameSelectedMacroButton then
+    MacroFrameSelectedMacroName:ClearAllPoints()
+    MacroFrameSelectedMacroName:SetPoint("LEFT", MacroFrameSelectedMacroButton, "RIGHT", 12, 0)
+  end
+
+  if MacroEditButton and MacroFrameSelectedMacroButton then
+    MacroEditButton:ClearAllPoints()
+    MacroEditButton:SetPoint("TOPLEFT", MacroFrameSelectedMacroButton, "BOTTOMLEFT", 0, -8)
+  end
+
+  if MacroSaveButton then
+    MacroSaveButton:ClearAllPoints()
+    MacroSaveButton:SetPoint("TOPRIGHT", topGroup, "TOPRIGHT", 0, -4)
+  end
+
+  if MacroCancelButton and MacroSaveButton then
+    MacroCancelButton:ClearAllPoints()
+    MacroCancelButton:SetPoint("TOPLEFT", MacroSaveButton, "BOTTOMLEFT", 0, -8)
+  end
+
+  local commandLabel = MacroFrameText and MacroFrameText.Text or MacroFrameText
+  if commandLabel then
+    commandLabel:ClearAllPoints()
+    commandLabel:SetPoint("TOPLEFT", topGroup, "BOTTOMLEFT", 0, -10)
+  end
+end
+
 local function ApplyLayout()
   if not MacroFrame or not MacroFrame.MacroSelector then
     return
   end
 
-  local rightPanelLeft = GetRightPanelLeft()
+  local rightPanelBaseLeft = GetRightPanelBaseLeft()
+  local textBoxLeft = GetTextBoxLeft()
+  local textBoxTopOffsetY = GetTextBoxTopOffsetY()
+  local selectedPanelTopOffsetY = GetSelectedPanelTopOffsetY()
 
   MacroFrame.MacroSelector.customStride = CONFIG.leftPanel.columns
 
@@ -128,8 +241,8 @@ local function ApplyLayout()
     "TOPLEFT",
     MacroFrame,
     "TOPLEFT",
-    rightPanelLeft,
-    CONFIG.rightPanel.selectedOffsetY
+    rightPanelBaseLeft,
+    selectedPanelTopOffsetY
   )
 
   MacroFrameTextBackground:ClearAllPoints()
@@ -137,13 +250,16 @@ local function ApplyLayout()
     "TOPLEFT",
     MacroFrame,
     "TOPLEFT",
-    rightPanelLeft,
-    CONFIG.rightPanel.topOffsetY
+    textBoxLeft,
+    textBoxTopOffsetY
   )
-  MacroFrameTextBackground:SetWidth(CONFIG.rightPanel.width)
-  MacroFrameTextBackground:SetHeight(CONFIG.rightPanel.height)
+  MacroFrameTextBackground:SetWidth(CONFIG.rightPanel.textBoxWidth)
+  MacroFrameTextBackground:SetHeight(CONFIG.rightPanel.textBoxHeight)
 
-  MacroFrameScrollFrame:SetHeight(CONFIG.rightPanel.scrollFrameHeight)
+  MacroFrameScrollFrame:SetHeight(CONFIG.rightPanel.textBoxHeight - 22)
+  MacroFrameScrollFrame:ClearAllPoints()
+  MacroFrameScrollFrame:SetPoint("TOPLEFT", MacroFrameTextBackground, "TOPLEFT", 10, -10)
+  MacroFrameScrollFrame:SetPoint("BOTTOMRIGHT", MacroFrameTextBackground, "BOTTOMRIGHT", -14, GetTextScrollFrameBottomInset())
 
   MacroFrameCharLimitText:ClearAllPoints()
   MacroFrameCharLimitText:SetPoint("TOP", MacroFrameTextBackground, "BOTTOM", 0, CONFIG.rightPanel.charLimitOffsetY)
@@ -153,6 +269,9 @@ local function ApplyLayout()
     MacroHorizontalBarLeft:Hide()
   end
 
+  RepositionRightPanelControls(rightPanelBaseLeft)
+  PositionScrollBars()
+  UpdateMacroSelectorButtons()
   UpdatePanelBackdrops()
 end
 
@@ -167,6 +286,12 @@ local function InitializeMacroFrame()
 
   MacroFrame:HookScript("OnShow", ApplyLayout)
   hooksecurefunc("MacroFrame_Update", ApplyLayout)
+
+  local selector = MacroFrame and MacroFrame.MacroSelector
+  local scrollBox = selector and selector.ScrollBox
+  if scrollBox then
+    hooksecurefunc(scrollBox, "Update", UpdateMacroSelectorButtons)
+  end
 end
 
 local function TryInitialize()
