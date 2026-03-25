@@ -1,17 +1,25 @@
-if UIParentLoadAddOn("Blizzard_MacroUI") then
-  -- Expand the main frame and macro selector area.
+local function ApplyLayout()
+  if not MacroFrame or not MacroFrame.MacroSelector then
+    return
+  end
+
+  -- Reapply the expanded frame size after Blizzard and ElvUI skin code run.
   MacroFrame.MacroSelector.customStride = 6
   MacroFrame:SetWidth(650)
   MacroFrame:SetHeight(490)
-  MacroFrame.MacroSelector:SetWidth(320)
+  MacroFrame.MacroSelector:SetWidth(322.5)
   MacroFrame.MacroSelector:SetHeight(395)
+
+  if MacroFrame.SetTemplate then
+    MacroFrame:SetTemplate("Transparent")
+  end
 
   -- Reposition and resize the macro text panel.
   MacroFrameTextBackground:ClearAllPoints()
   MacroFrameTextBackground:SetPoint("TOPLEFT", MacroFrame, "TOPLEFT", 330, -150)
   MacroFrameTextBackground:SetHeight(220)
   MacroFrameTextBackground:SetWidth(280)
-  
+
   MacroFrameScrollFrame:ClearAllPoints()
   MacroFrameScrollFrame:SetPoint("TOPLEFT", MacroFrame, "TOPLEFT", 335, -155)
   MacroFrameScrollFrame:SetHeight(215)
@@ -47,3 +55,19 @@ if UIParentLoadAddOn("Blizzard_MacroUI") then
   MacroCancelButton:ClearAllPoints()
   MacroCancelButton:SetPoint("TOPLEFT", MacroFrameSelectedMacroButton, "TOPLEFT", 220, -35)
 end
+
+local function Initialize()
+  if not UIParentLoadAddOn("Blizzard_MacroUI") then
+    return
+  end
+
+  ApplyLayout()
+
+  if not MacroFrame.__simpleMacroPageHooked then
+    MacroFrame.__simpleMacroPageHooked = true
+    MacroFrame:HookScript("OnShow", ApplyLayout)
+    hooksecurefunc(MacroFrame, "Update", ApplyLayout)
+  end
+end
+
+Initialize()
