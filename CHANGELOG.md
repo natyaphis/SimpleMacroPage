@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Maintenance update.
+
 ## 1.1.1
 
 - Maintenance update.
@@ -26,5 +30,3 @@ All notable changes to this project will be documented in this file.
 
 - Initial commit
 - Updated addon version metadata.
-
-## Unreleased
