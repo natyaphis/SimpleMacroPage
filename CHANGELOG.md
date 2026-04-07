@@ -2,7 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.1.3
+
+- Release SimpleMacroPage v1.1.1
+- Initial commit
+- Updated addon version metadata.
+
 ## Unreleased
+
+- Maintenance update.
+
+## 1.1.2
 
 - Maintenance update.
 

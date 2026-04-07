@@ -1,3 +1,5 @@
+local pendingLayout = false
+
 local function ApplyLayout()
   if not MacroFrame or not MacroFrame.MacroSelector then
     return
@@ -56,17 +58,38 @@ local function ApplyLayout()
   MacroCancelButton:SetPoint("TOPLEFT", MacroFrameSelectedMacroButton, "TOPLEFT", 220, -35)
 end
 
+local function RequestLayout()
+  if InCombatLockdown() then
+    pendingLayout = true
+    return
+  end
+
+  pendingLayout = false
+  ApplyLayout()
+end
+
 local function Initialize()
   if not UIParentLoadAddOn("Blizzard_MacroUI") then
     return
   end
 
-  ApplyLayout()
+  RequestLayout()
 
   if not MacroFrame.__simpleMacroPageHooked then
     MacroFrame.__simpleMacroPageHooked = true
-    MacroFrame:HookScript("OnShow", ApplyLayout)
-    hooksecurefunc(MacroFrame, "Update", ApplyLayout)
+    MacroFrame:HookScript("OnShow", function()
+      C_Timer.After(0, RequestLayout)
+    end)
+  end
+
+  if not SimpleMacroPageFrame then
+    local frame = CreateFrame("Frame", "SimpleMacroPageFrame")
+    frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    frame:SetScript("OnEvent", function(_, event)
+      if event == "PLAYER_REGEN_ENABLED" and pendingLayout then
+        RequestLayout()
+      end
+    end)
   end
 end
 
